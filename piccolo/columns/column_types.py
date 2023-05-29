@@ -374,7 +374,7 @@ class Email(Varchar):
     def __init__(
             self,
             length: int = 255,
-            default: t.Optional[str, Enum, t.Callable[[], str]] = None,
+            default: t.Union[str, Enum, t.Callable[[], str], None] = "",
             **kwargs,
     ) -> None:
         self._validate_default(default, (str, None))

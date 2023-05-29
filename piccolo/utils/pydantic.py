@@ -219,7 +219,7 @@ def create_pydantic_model(
                 max_digits=column.precision, decimal_places=column.scale
             )
         elif isinstance(column, Email):
-            value_type = pydantic.EmailStr
+            value_type = t.Union[pydantic.EmailStr, t.Literal[""]]
         elif isinstance(column, Varchar):
             value_type = pydantic.constr(max_length=column.length)
         elif isinstance(column, Array):
