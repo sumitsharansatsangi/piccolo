@@ -368,7 +368,57 @@ class Email(Varchar):
     also validates emails addresses.
     """  # noqa: E501
 
-    pass
+    value_type = str
+    concat_delegate: ConcatDelegate = ConcatDelegate()
+
+    def __init__(
+            self,
+            length: int = 255,
+            default: t.Optional[str, Enum, t.Callable[[], str]] = None,
+            **kwargs,
+    ) -> None:
+        self._validate_default(default, (str, None))
+
+        self.length = length
+        self.default = default
+        kwargs.update({"length": length, "default": default})
+        super().__init__(**kwargs)
+
+    @property
+    def column_type(self):
+        return f"VARCHAR({self.length})" if self.length else "VARCHAR"
+
+    ###########################################################################
+    # For update queries
+
+    def __add__(self, value: t.Union[str, Varchar, Text]) -> QueryString:
+        return self.concat_delegate.get_querystring(
+            column_name=self._meta.db_column_name, value=value
+        )
+
+    def __radd__(self, value: t.Union[str, Varchar, Text]) -> QueryString:
+        return self.concat_delegate.get_querystring(
+            column_name=self._meta.db_column_name,
+            value=value,
+            reverse=True,
+        )
+
+    ###########################################################################
+    # Descriptors
+
+    @t.overload
+    def __get__(self, obj: Table, objtype=None) -> str:
+        ...
+
+    @t.overload
+    def __get__(self, obj: None, objtype=None) -> Varchar:
+        ...
+
+    def __get__(self, obj, objtype=None):
+        return obj.__dict__[self._meta.name] if obj else self
+
+    def __set__(self, obj, value: t.Union[str, None]):
+        obj.__dict__[self._meta.name] = value
 
 
 class Secret(Varchar):
